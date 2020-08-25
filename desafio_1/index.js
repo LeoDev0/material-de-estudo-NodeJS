@@ -10,6 +10,26 @@ const projects = [
     { id: '4', title: 'novo projeto', tasks: [] },
 ];
 
+// Middleware local
+function idExists(req, res, next) {
+    const { id } = req.params;
+
+    idIsValid = projects.find((element) => element.id == id);
+
+    if (!idIsValid) {
+        return res.status(404).json({ error: 'Esse projeto não existe' });
+    }
+
+    return next();
+}
+
+// Middleware global
+server.use((req, res, next) => {
+    console.count('Número de requisições');
+
+    next();
+});
+
 server.post('/projects', (req, res) => {
     const { id, title } = req.body;
 
@@ -22,34 +42,35 @@ server.get('/projects', (req, res) => {
     return res.json(projects);
 });
 
-server.get('/projects/:id', (req, res) => {
+server.get('/projects/:id', idExists, (req, res) => {
     id = req.params.id;
 
     return res.json(projects.find((element) => element.id == id));
 });
 
-server.put('/projects/:id', (req, res) => {
+server.put('/projects/:id', idExists, (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
 
     project = projects.find((element) => element.id == id);
     project.title = title;
 
-    return res.json(projects);
+    return res.json(project);
 });
 
-server.delete('/projects/:id', (req, res) => {
+server.delete('/projects/:id', idExists, (req, res) => {
     const { id } = req.params;
 
-    project = projects.find((element) => element.id == id);
-    projectIndex = projects.indexOf(project);
+    // project = projects.find((element) => element.id == id);
+    // projectIndex = projects.indexOf(project);
+    const projectIndex = projects.findIndex((p) => p.id == id);
 
     projects.splice(projectIndex, 1);
 
     return res.send();
 });
 
-server.post('/projects/:id/tasks', (req, res) => {
+server.post('/projects/:id/tasks', idExists, (req, res) => {
     const { id } = req.params;
     const { title } = req.body;
 
@@ -58,7 +79,8 @@ server.post('/projects/:id/tasks', (req, res) => {
 
     tasks.push(title);
 
-    return res.json(projects);
+    return res.json(project);
 });
 
 server.listen('3000');
+
